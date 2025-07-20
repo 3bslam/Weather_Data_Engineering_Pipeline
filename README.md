@@ -13,8 +13,8 @@ environment
 1. 📥 Data Extraction using Python
 A Python script fetches weather data from a public API.
 
+<img width="1920" height="911" alt="data pipeline" src="https://github.com/user-attachments/assets/4b108e37-4370-4906-a828-278762ee2a93" />
 
-<img width="1920" height="911" alt="data " src="https://github.com/user-attachments/assets/bc6590d0-2baf-4e1f-9a3e-cc4c0a0f36de" />
 
 The data includes: temperature, humidity, wind speed, timestamp, and location.
 
