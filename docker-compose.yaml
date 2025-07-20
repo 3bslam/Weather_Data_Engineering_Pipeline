@@ -1,0 +1,118 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: airflow_postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - airflow-net
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    image: apache/airflow:2.8.0
+    container_name: airflow_init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'o34K7TtCR3K_Rrgzgqg1o91c5iyVbpj6oRnwj3Ig1to='
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./requirements.txt:/requirements.txt
+
+      
+    entrypoint: bash -c "
+      airflow db migrate &&
+      airflow users create \
+        --username admin \
+        --firstname Ayman \
+        --lastname Abdelsalam \
+        --role Admin \
+        --email aymanabdelsalam81@gmail.com \
+        --password admin
+     "
+    networks:
+      - airflow-net
+
+  airflow-webserver:
+    image: apache/airflow:2.8.0
+    container_name: airflow_webserver
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'o34K7TtCR3K_Rrgzgqg1o91c5iyVbpj6oRnwj3Ig1to='
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./dbt:/opt/airflow/dbt
+      - ./plugins:/opt/airflow/plugins
+      - ./requirements.txt:/requirements.txt
+    command: bash -c "pip install -r /requirements.txt && airflow webserver"
+    ports:
+      - "8080:8080"
+    networks:
+      - airflow-net
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.0
+    container_name: airflow_scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: 'o34K7TtCR3K_Rrgzgqg1o91c5iyVbpj6oRnwj3Ig1to='
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./dbt:/opt/airflow/dbt
+      - ./plugins:/opt/airflow/plugins
+      - ./requirements.txt:/requirements.txt
+    entrypoint: bash -c "pip install -r /requirements.txt && airflow scheduler"
+    command: airflow scheduler
+    networks:
+      - airflow-net
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.7.8
+    container_name: dbt_service
+    depends_on:
+      - postgres
+    volumes:
+      - ./dbt:/usr/app  
+      - ./dbt/weather_project/.dbt/profiles.yml:/root/.dbt/profiles.yml  
+    working_dir: /usr/app
+    entrypoint: tail -f /dev/null 
+    networks:
+      - airflow-net
+
+
+networks:
+  airflow-net:
+    driver: bridge
+
+volumes:
+  postgres-data:

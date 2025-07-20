@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: weather
+    schema: weather
+    tables:
+      - name: conditions
+      - name: locations
+      - name: weather_data
