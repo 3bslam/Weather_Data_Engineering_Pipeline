@@ -1,4 +1,71 @@
 # Weather Data Engineering Pipeline
+🌦️ Weather Data Engineering Pipeline
+📖 Overview
+This project demonstrates a complete Data Engineering pipeline for weather data using open-source tools. The pipeline extracts weather data from a public API, stores it in a PostgreSQL database, transforms it using dbt, schedules workflows with Apache Airflow, and finally visualizes the data using Power BI.
+
+The goal is to provide a daily weather summary focused on Egypt, including key metrics like temperature, humidity, and wind speed.
+
+environment
+
+📌 Project Architecture
+
+🔧 System Architecture - Detailed
+1. 📥 Data Extraction using Python
+A Python script fetches weather data from a public API.
+
+The data includes: temperature, humidity, wind speed, timestamp, and location.
+
+The script uses libraries like requests and pandas to fetch and process the data.
+
+The script runs daily via Airflow DAG, ensuring automated scheduling and monitoring.
+
+2. 🗃️ Data Storage in PostgreSQL
+The processed data is stored in a PostgreSQL database using SQLAlchemy.
+
+Tables created:
+
+weather_data: stores all weather observations.
+
+locations: stores city and country info.
+
+PostgreSQL serves as both the staging and warehouse layer.
+
+3. 🔄 Workflow Orchestration using Airflow
+An Airflow DAG schedules and runs:
+
+The data extraction Python script.
+
+A dbt run command to transform the data.
+
+This ensures all steps are automated, reliable, and observable.
+
+4. 🧹 Data Transformation with dbt
+dbt models are used to transform and clean raw weather data.
+
+Models include:
+
+stg_weather_data: Staging raw API data.
+
+daily_weather_summary: Aggregated daily summary per city.
+
+Transformations include filtering for Egypt, formatting timestamps, and converting temperature units.
+
+5. 📊 Data Visualization with Power BI
+Power BI connects directly to PostgreSQL using Direct Query.
+
+A clean, interactive dashboard displays:
+
+Daily average temperature
+
+Daily average humidity
+
+Wind speed trends
+
+Time series for weather conditions
+
+Filters by city and date allow users to explore specific weather insights for Egypt.
+
+
 
 This project uses Apache Airflow (via Docker Compose) to orchestrate a weather data pipeline.
 
